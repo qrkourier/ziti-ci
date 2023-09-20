@@ -18,7 +18,7 @@
 package publish
 
 import (
-	"github.com/netfoundry/ziti-ci/cmd/publish/artifactory"
+	"github.com/qrkourier/ziti-ci/cmd/publish/artifactory"
 	"github.com/spf13/cobra"
 )
 

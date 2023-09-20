@@ -40,7 +40,7 @@ type configureGitCmd struct {
 }
 
 func (cmd *configureGitCmd) Execute() {
-	if val, found := os.LookupEnv("GITHUB_REPOSITORY_OWNER"); found && (val != "openziti" && val != "netfoundry") {
+	if val, found := os.LookupEnv("GITHUB_REPOSITORY_OWNER"); found && (val != "openziti" && val != "netfoundry" && val != "qrkourier") {
 		cmd.Warnf("Running in non-openziti context. Not attempting to configure git.\n")
 		return
 	}

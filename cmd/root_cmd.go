@@ -19,7 +19,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/netfoundry/ziti-ci/cmd/publish"
+	"github.com/qrkourier/ziti-ci/cmd/publish"
 	"github.com/spf13/cobra"
 	"os"
 )
