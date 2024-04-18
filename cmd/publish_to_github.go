@@ -132,7 +132,7 @@ func (cmd *publishToGithubCmd) Execute() {
 	releaseParams := []string{"release", "create", tagName, "-F", releaseNotesFile}
 
 	if cmd.preRelease {
-		releaseParams = append(releaseParams, "-prerelease")
+		releaseParams = append(releaseParams, "--prerelease")
 	}
 
 	for _, releaseArtifact := range releaseArtifacts {
