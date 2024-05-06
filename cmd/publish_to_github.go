@@ -29,6 +29,7 @@ type publishToGithubCmd struct {
 	BaseCommand
 	name        string
 	archiveBase string
+	preRelease  bool
 }
 
 type githubArtifact struct {
@@ -130,6 +131,10 @@ func (cmd *publishToGithubCmd) Execute() {
 	}
 	releaseParams := []string{"release", "create", tagName, "-F", releaseNotesFile}
 
+	if cmd.preRelease {
+		releaseParams = append(releaseParams, "--prerelease")
+	}
+
 	for _, releaseArtifact := range releaseArtifacts {
 		cmd.Infof("Publishing %v\n", releaseArtifact)
 		releaseParams = append(releaseParams, releaseArtifact)
@@ -155,6 +160,6 @@ func newPublishToGithubCmd(root *RootCommand) *cobra.Command {
 	}
 
 	cobraCmd.Flags().StringVar(&result.archiveBase, "archive-base", "", "Directory to store release files in archives defaults to project name if not specified. May be set to blank.")
-
+	cobraCmd.Flags().BoolVarP(&result.preRelease, "prerelease", "p", false, "Publish as pre-release")
 	return Finalize(result)
 }

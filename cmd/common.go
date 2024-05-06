@@ -407,14 +407,6 @@ func (cmd *BaseCommand) tarGzSimple(archiveFile string, filesToInclude ...string
 	cmd.tarGz(archiveFile, nameMap)
 }
 
-func (cmd *BaseCommand) tarGzArtifacts(archiveFile string, artifacts ...*artifact) {
-	nameMap := map[string]string{}
-	for _, artifact := range artifacts {
-		nameMap[artifact.sourcePath] = fmt.Sprintf("%v/%v/%v", artifact.arch, artifact.os, artifact.sourceName)
-	}
-	cmd.tarGz(archiveFile, nameMap)
-}
-
 func (cmd *BaseCommand) tarGzGhArtifacts(projectName, archiveFile string, artifacts ...*githubArtifact) {
 	nameMap := map[string]string{}
 	for _, artifact := range artifacts {
