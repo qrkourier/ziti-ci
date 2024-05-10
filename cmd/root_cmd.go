@@ -68,6 +68,7 @@ func newRootCommand() *RootCommand {
 
 	rootCobraCmd.AddCommand(newTagCmd(rootCmd))
 	rootCobraCmd.AddCommand(newGoBuildInfoCmd(rootCmd))
+	rootCobraCmd.AddCommand(newSdkBuildInfoCmd(rootCmd))
 	rootCobraCmd.AddCommand(newConfigureGitCmd(rootCmd))
 	rootCobraCmd.AddCommand(newUpdateGoDepCmd(rootCmd))
 	rootCobraCmd.AddCommand(newCompleteUpdateGoDepCmd(rootCmd))
@@ -78,9 +79,11 @@ func newRootCommand() *RootCommand {
 	rootCobraCmd.AddCommand(newPublishToGithubCmd(rootCmd))
 	rootCobraCmd.AddCommand(newGetCurrentVersionCmd(rootCmd))
 	rootCobraCmd.AddCommand(newGetNextVersionCmd(rootCmd))
+	rootCobraCmd.AddCommand(newVerifyVersionCmd(rootCmd))
 	rootCobraCmd.AddCommand(newGetBranchCmd(rootCmd))
 	rootCobraCmd.AddCommand(newGetReleaseNotesCmd(rootCmd))
 	rootCobraCmd.AddCommand(newBuildReleaseNotesCmd(rootCmd))
+	rootCobraCmd.AddCommand(newBuildSdkReleaseNotesCmd(rootCmd))
 
 	var versionCmd = &cobra.Command{
 		Use:   "version",
