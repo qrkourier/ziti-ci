@@ -51,10 +51,24 @@ type CiCmd interface {
 	Execute()
 }
 
+type ErroringCiCmd interface {
+	GetCobraCmd() *cobra.Command
+	Init(args []string)
+	Execute() error
+}
+
 func Finalize(cmd CiCmd) *cobra.Command {
 	cmd.GetCobraCmd().Run = func(_ *cobra.Command, args []string) {
 		cmd.Init(args)
 		cmd.Execute()
+	}
+	return cmd.GetCobraCmd()
+}
+
+func FinalizeErroringCmd(cmd ErroringCiCmd) *cobra.Command {
+	cmd.GetCobraCmd().RunE = func(_ *cobra.Command, args []string) error {
+		cmd.Init(args)
+		return cmd.Execute()
 	}
 	return cmd.GetCobraCmd()
 }

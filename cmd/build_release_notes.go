@@ -34,13 +34,17 @@ import (
 	"strings"
 )
 
-type buildReleaseNotesCmd struct {
+type baseBuildReleaseNotesCmd struct {
 	BaseCommand
 	AllCommits    bool
 	ShowUnchanged bool
 }
 
-func (cmd *buildReleaseNotesCmd) getUnversionedPath(m module.Version) string {
+type buildReleaseNotesCmd struct {
+	baseBuildReleaseNotesCmd
+}
+
+func (cmd *baseBuildReleaseNotesCmd) getUnversionedPath(m module.Version) string {
 	parts := strings.Split(m.Path, "/")
 	lastElement := parts[len(parts)-1]
 	match, err := regexp.Match(`v(\d+)`, []byte(lastElement))
@@ -53,7 +57,7 @@ func (cmd *buildReleaseNotesCmd) getUnversionedPath(m module.Version) string {
 	return m.Path
 }
 
-func (cmd *buildReleaseNotesCmd) getPreviousVersion(path string) *string {
+func (cmd *baseBuildReleaseNotesCmd) getPreviousVersion(path string) *string {
 	parts := strings.Split(path, "/")
 	lastElement := parts[len(parts)-1]
 	match, err := regexp.Match(`v(\d+)`, []byte(lastElement))
@@ -147,7 +151,7 @@ func (cmd *buildReleaseNotesCmd) Execute() {
 
 }
 
-func (cmd *buildReleaseNotesCmd) GetChanges(project string, oldVersion string, newVersion string) error {
+func (cmd *baseBuildReleaseNotesCmd) GetChanges(project string, oldVersion string, newVersion string) error {
 	dir, err := os.Getwd()
 	if err != nil {
 		return errors.Wrapf(err, "unable to get working directory")
@@ -202,7 +206,7 @@ func (cmd *buildReleaseNotesCmd) GetChanges(project string, oldVersion string, n
 	}
 
 	// The old tag may be a tag commit not in the main-line, so we'll have to find the parent
-	if project == "ziti" {
+	if project == "ziti" || project == "sdk-golang" {
 		if tagCommit.NumParents() == 1 && tagCommit.Author.Name == "ziti-ci" {
 			tagCommit, err = tagCommit.Parent(0)
 			if err != nil {
@@ -267,20 +271,23 @@ func (cmd *buildReleaseNotesCmd) GetChanges(project string, oldVersion string, n
 			continue
 		}
 
-		if cmd.AllCommits {
+		issueFound := false
+		for _, issue := range cmd.extractIssues(c) {
+			cmd.outputIssue(issue)
+			showedChange = true
+			issueFound = true
+		}
+
+		if !issueFound && cmd.AllCommits {
 			lines := strings.Split(c.Message, "\n")
 			fmt.Printf("    * %v: %v (%v)\n", c.Hash.String()[:7], lines[0], c.Author.Email)
 			showedChange = true
-		} else {
-			for _, issue := range cmd.extractIssues(c) {
-				cmd.outputIssue(issue)
-				showedChange = true
-			}
 		}
+
 	}
 }
 
-func (cmd *buildReleaseNotesCmd) extractIssues(c *object.Commit) []string {
+func (cmd *baseBuildReleaseNotesCmd) extractIssues(c *object.Commit) []string {
 	r, err := regexp.Compile(`(fix(e[sd])?|close[sd]?|resolve[sd]?)\s*#(\d+)`)
 	if err != nil {
 		panic(err)
@@ -294,7 +301,7 @@ func (cmd *buildReleaseNotesCmd) extractIssues(c *object.Commit) []string {
 	return result
 }
 
-func (cmd *buildReleaseNotesCmd) outputIssue(issue string) {
+func (cmd *baseBuildReleaseNotesCmd) outputIssue(issue string) {
 	bin, err := exec.LookPath("gh")
 	if err != nil {
 		panic(errors.Wrap(err, "gh (github CLI) not found. Please make sure it's installed an you are authenticated"))
@@ -312,9 +319,11 @@ func newBuildReleaseNotesCmd(root *RootCommand) *cobra.Command {
 	}
 
 	result := &buildReleaseNotesCmd{
-		BaseCommand: BaseCommand{
-			RootCommand: root,
-			Cmd:         cobraCmd,
+		baseBuildReleaseNotesCmd: baseBuildReleaseNotesCmd{
+			BaseCommand: BaseCommand{
+				RootCommand: root,
+				Cmd:         cobraCmd,
+			},
 		},
 	}
 
