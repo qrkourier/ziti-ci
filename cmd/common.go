@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/go-version"
 	"github.com/spf13/cobra"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"os/user"
@@ -373,12 +372,12 @@ func (cmd *BaseCommand) getBaseVersion() *version.Version {
 		if cmd.baseVersionFile == "" {
 			cmd.baseVersionFile = DefaultVersionFile
 		}
-		contents, err := ioutil.ReadFile(cmd.baseVersionFile)
+		contents, err := os.ReadFile(cmd.baseVersionFile)
 		if err != nil {
 			currdir, _ := os.Getwd()
 			cmd.Errorf("unable to load base version information from '%v'. current dir: '%v'\n", cmd.baseVersionFile, currdir)
 
-			contents, err = ioutil.ReadFile("./common/version/VERSION")
+			contents, err = os.ReadFile("./common/version/VERSION")
 			if err != nil {
 				cmd.Failf("unable to load base version information from '%v'. current dir: '%v'\n", cmd.baseVersionFile, currdir)
 			}

@@ -68,6 +68,8 @@ func newRootCommand() *RootCommand {
 
 	rootCobraCmd.AddCommand(newTagCmd(rootCmd))
 	rootCobraCmd.AddCommand(newGoBuildInfoCmd(rootCmd))
+	rootCobraCmd.AddCommand(newGoBuildFlagsCmd(rootCmd))
+	rootCobraCmd.AddCommand(newTidyTagsCmd(rootCmd))
 	rootCobraCmd.AddCommand(newSdkBuildInfoCmd(rootCmd))
 	rootCobraCmd.AddCommand(newConfigureGitCmd(rootCmd))
 	rootCobraCmd.AddCommand(newUpdateGoDepCmd(rootCmd))
