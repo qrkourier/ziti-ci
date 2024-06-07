@@ -49,8 +49,8 @@ package {{.PackageName}}
 const (
 	Version   = "{{.Version}}"
 	Revision  = "{{.Revision}}"
-	Branch    = "{{.Branch}}"
-	BuildUser = "{{.BuildUser}}"
+	Branch    = "unknown"
+	BuildUser = "unknown"
 	BuildDate = "{{.BuildDate}}"
 )
 `
@@ -59,8 +59,6 @@ type GoBuildInfo struct {
 	PackageName string
 	Version     string
 	Revision    string
-	Branch      string
-	BuildUser   string
 	BuildDate   string
 }
 
@@ -85,8 +83,6 @@ func (cmd *GoBuildInfoCmd) Execute() {
 		PackageName: cmd.Args[1],
 		Version:     tagVersion,
 		Revision:    cmd.GetCmdOutputOneLine("get git SHA", "git", "rev-parse", "--short=12", "HEAD"),
-		Branch:      cmd.GetCurrentBranch(),
-		BuildUser:   cmd.GetUsername(),
 		BuildDate:   time.Now().Format(time.RFC3339),
 	}
 
