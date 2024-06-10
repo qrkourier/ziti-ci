@@ -179,6 +179,16 @@ func (cmd *BaseCommand) EvalCurrentAndNextVersion() {
 		cmd.NextVersion = cmd.BaseVersion
 	}
 
+	if cmd.useCurrentTag {
+		tag := cmd.runCommandWithOutput("get current git tag", "git", "describe")
+		v, err := version.NewVersion(tag[0])
+		if err != nil {
+			panic(fmt.Errorf("unable to parse tag %s", tag[0]))
+		}
+
+		cmd.NextVersion = v
+	}
+
 	if !cmd.quiet {
 		fmt.Printf("current version: %v, next version: %v\n", cmd.CurrentVersion, cmd.NextVersion)
 	}
