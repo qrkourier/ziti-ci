@@ -180,10 +180,16 @@ func (cmd *BaseCommand) EvalCurrentAndNextVersion() {
 	}
 
 	if cmd.useCurrentTag {
-		tag := cmd.runCommandWithOutput("get current git tag", "git", "describe", "--tags")
-		v, err := version.NewVersion(tag[0])
+		tag := ""
+		if strings.EqualFold("true", os.Getenv("GITHUB_ACTIONS")) {
+			tag = os.Getenv("GITHUB_REF_NAME")
+		} else {
+			tags := cmd.runCommandWithOutput("get current git tag", "git", "describe", "--tags")
+			tag = tags[0]
+		}
+		v, err := version.NewVersion(tag)
 		if err != nil {
-			panic(fmt.Errorf("unable to parse tag %s", tag[0]))
+			panic(fmt.Errorf("unable to parse tag %s", tag))
 		}
 
 		cmd.CurrentVersion = v
