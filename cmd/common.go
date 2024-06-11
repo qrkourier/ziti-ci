@@ -23,6 +23,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/hashicorp/go-version"
 	"github.com/spf13/cobra"
@@ -155,9 +156,6 @@ func (cmd *BaseCommand) EvalCurrentAndNextVersion() {
 	}
 
 	for _, v := range versions {
-		if cmd.verbose {
-			cmd.Infof("Comparing against: %v\n", v)
-		}
 		if min.LessThanOrEqual(v) && v.LessThan(max) {
 			cmd.CurrentVersion = v
 		}
@@ -182,10 +180,22 @@ func (cmd *BaseCommand) EvalCurrentAndNextVersion() {
 	if cmd.useCurrentTag {
 		tag := ""
 		if strings.EqualFold("true", os.Getenv("GITHUB_ACTIONS")) {
+			if cmd.verbose {
+				fmt.Println("running in github actions, getting tag name from environment")
+			}
 			tag = os.Getenv("GITHUB_REF_NAME")
+			if tag == "" {
+				panic(errors.New("GITHUB_REF_NAME not set"))
+			}
+			if cmd.verbose {
+				fmt.Printf("running in github actions, found tag: %s\n", tag)
+			}
 		} else {
 			tags := cmd.runCommandWithOutput("get current git tag", "git", "describe", "--tags")
 			tag = tags[0]
+			if cmd.verbose {
+				fmt.Printf("got tag name from git: %s\n", tag)
+			}
 		}
 		v, err := version.NewVersion(tag)
 		if err != nil {
@@ -297,9 +307,6 @@ func (cmd *BaseCommand) getVersionList(params ...string) []*version.Version {
 		}
 		if v.Prerelease() == "" && v.Metadata() == "" {
 			versions = append(versions, v)
-			if cmd.verbose {
-				cmd.Infof("found version %v\n", v)
-			}
 		}
 	}
 	sort.Sort(versionList(versions))
