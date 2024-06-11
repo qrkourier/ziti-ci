@@ -180,13 +180,13 @@ func (cmd *BaseCommand) EvalCurrentAndNextVersion() {
 	}
 
 	if cmd.useCurrentTag {
-		tag := cmd.runCommandWithOutput("get current git tag", "git", "describe")
+		tag := cmd.runCommandWithOutput("get current git tag", "git", "describe", "--tags")
 		v, err := version.NewVersion(tag[0])
 		if err != nil {
 			panic(fmt.Errorf("unable to parse tag %s", tag[0]))
 		}
 
-		cmd.NextVersion = v
+		cmd.CurrentVersion = v
 	}
 
 	if !cmd.quiet {
