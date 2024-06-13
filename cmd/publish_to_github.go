@@ -129,7 +129,7 @@ func (cmd *publishToGithubCmd) Execute() {
 	if cmd.isGoLang() {
 		tagName = "v" + version
 	}
-	releaseParams := []string{"release", "create", tagName, "-F", releaseNotesFile}
+	releaseParams := []string{"release", "create", tagName, "-F", releaseNotesFile, "--title", tagName}
 
 	if cmd.preRelease {
 		releaseParams = append(releaseParams, "--prerelease")
