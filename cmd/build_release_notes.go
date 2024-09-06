@@ -60,7 +60,7 @@ func (cmd *baseBuildReleaseNotesCmd) getUnversionedPath(m module.Version) string
 func (cmd *baseBuildReleaseNotesCmd) getPreviousVersion(path string) *string {
 	parts := strings.Split(path, "/")
 	lastElement := parts[len(parts)-1]
-	match, err := regexp.Match(`v(\d+)`, []byte(lastElement))
+	match, err := regexp.Match(`^v(\d+)`, []byte(lastElement))
 	if err != nil {
 		panic(err)
 	}
