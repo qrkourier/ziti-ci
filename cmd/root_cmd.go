@@ -84,6 +84,7 @@ func newRootCommand() *RootCommand {
 	rootCobraCmd.AddCommand(newGetCurrentVersionCmd(rootCmd))
 	rootCobraCmd.AddCommand(newGetNextVersionCmd(rootCmd))
 	rootCobraCmd.AddCommand(newVerifyVersionCmd(rootCmd))
+	rootCobraCmd.AddCommand(newVerifyCurrentVersionCmd(rootCmd))
 	rootCobraCmd.AddCommand(newGetBranchCmd(rootCmd))
 	rootCobraCmd.AddCommand(newGetReleaseNotesCmd(rootCmd))
 	rootCobraCmd.AddCommand(newBuildReleaseNotesCmd(rootCmd))
