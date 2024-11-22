@@ -10,4 +10,4 @@ runs:
   steps:
     - name: install ziti-ci
       shell: bash
-      run: go install github.com/netfoundry/ziti-ci@${{ inputs.ziti-ci-version }}
+      run: go install github.com/openziti/ziti-ci@${{ inputs.ziti-ci-version }}

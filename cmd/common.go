@@ -251,13 +251,22 @@ func (cmd *BaseCommand) getGoEnv() map[string]string {
 }
 
 func (cmd *BaseCommand) runCommandWithOutput(description string, name string, params ...string) []string {
+	result, _ := cmd.runCommandWithOutputFailOptional(true, description, name, params...)
+	return result
+}
+
+func (cmd *BaseCommand) runCommandWithOutputFailOptional(fail bool, description string, name string, params ...string) ([]string, error) {
 	cmd.Infof("%v: %v %v\n", description, name, strings.Join(params, " "))
 	command := exec.Command(name, params...)
 	command.Stderr = nil
 	output := &bytes.Buffer{}
 	command.Stdout = output
 	if err := command.Run(); err != nil {
-		cmd.Failf("error %v: %v\n", description, err)
+		if fail {
+			cmd.Failf("error %v: %v\n", description, err)
+		} else {
+			return nil, err
+		}
 	}
 
 	stringData := strings.Replace(output.String(), "\r\n", "\n", -1)
@@ -268,7 +277,7 @@ func (cmd *BaseCommand) runCommandWithOutput(description string, name string, pa
 			result = append(result, line)
 		}
 	}
-	return result
+	return result, nil
 }
 
 func (cmd *BaseCommand) runCommand(description string, name string, params ...string) {
