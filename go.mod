@@ -1,4 +1,4 @@
-module github.com/netfoundry/ziti-ci
+module github.com/openziti/ziti-ci
 
 go 1.20
 
