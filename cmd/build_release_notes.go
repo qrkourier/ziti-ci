@@ -306,9 +306,11 @@ func (cmd *baseBuildReleaseNotesCmd) outputIssue(issue string) {
 	if err != nil {
 		panic(errors.Wrap(err, "gh (github CLI) not found. Please make sure it's installed an you are authenticated"))
 	}
-	out := cmd.runCommandWithOutput("Get Issue", bin,
+	out, err := cmd.runCommandWithOutputFailOptional(false, "Get Issue", bin,
 		"issue", "view", issue, "--json", "number,title,url", "--jq", `"[Issue #" + (.number|tostring) + "](" + .url + ") - " + .title`)
-	fmt.Printf("    * %v\n", out[0])
+	if err == nil {
+		fmt.Printf("    * %v\n", out[0])
+	}
 }
 
 func newBuildReleaseNotesCmd(root *RootCommand) *cobra.Command {
