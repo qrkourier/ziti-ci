@@ -18,7 +18,7 @@
 package main
 
 import (
-	"github.com/netfoundry/ziti-ci/cmd"
+	"github.com/openziti/ziti-ci/cmd"
 )
 
 func main() {
