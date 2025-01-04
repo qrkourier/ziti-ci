@@ -23,11 +23,11 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/hashicorp/go-version"
 	"github.com/spf13/cobra"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"os/user"
@@ -51,10 +51,24 @@ type CiCmd interface {
 	Execute()
 }
 
+type ErroringCiCmd interface {
+	GetCobraCmd() *cobra.Command
+	Init(args []string)
+	Execute() error
+}
+
 func Finalize(cmd CiCmd) *cobra.Command {
 	cmd.GetCobraCmd().Run = func(_ *cobra.Command, args []string) {
 		cmd.Init(args)
 		cmd.Execute()
+	}
+	return cmd.GetCobraCmd()
+}
+
+func FinalizeErroringCmd(cmd ErroringCiCmd) *cobra.Command {
+	cmd.GetCobraCmd().RunE = func(_ *cobra.Command, args []string) error {
+		cmd.Init(args)
+		return cmd.Execute()
 	}
 	return cmd.GetCobraCmd()
 }
@@ -132,7 +146,7 @@ func (cmd *BaseCommand) GetCobraCmd() *cobra.Command {
 }
 
 func (cmd *BaseCommand) EvalCurrentAndNextVersion() {
-	cmd.runGitCommandAlways("fetching git tags", "fetch", "--tags")
+	cmd.runGitCommandAlways("fetching git tags", "fetch", "--tags", "--force")
 	versions := cmd.getVersionList("tag", "--list")
 
 	min := setPatch(cmd.BaseVersion, 0)
@@ -142,9 +156,6 @@ func (cmd *BaseCommand) EvalCurrentAndNextVersion() {
 	}
 
 	for _, v := range versions {
-		if cmd.verbose {
-			cmd.Infof("Comparing against: %v\n", v)
-		}
 		if min.LessThanOrEqual(v) && v.LessThan(max) {
 			cmd.CurrentVersion = v
 		}
@@ -164,6 +175,34 @@ func (cmd *BaseCommand) EvalCurrentAndNextVersion() {
 
 	if cmd.NextVersion.LessThan(cmd.BaseVersion) {
 		cmd.NextVersion = cmd.BaseVersion
+	}
+
+	if cmd.useCurrentTag {
+		tag := ""
+		if strings.EqualFold("true", os.Getenv("GITHUB_ACTIONS")) {
+			if cmd.verbose {
+				fmt.Println("running in github actions, getting tag name from environment")
+			}
+			tag = os.Getenv("GITHUB_REF_NAME")
+			if tag == "" {
+				panic(errors.New("GITHUB_REF_NAME not set"))
+			}
+			if cmd.verbose {
+				fmt.Printf("running in github actions, found tag: %s\n", tag)
+			}
+		} else {
+			tags := cmd.runCommandWithOutput("get current git tag", "git", "describe", "--tags")
+			tag = tags[0]
+			if cmd.verbose {
+				fmt.Printf("got tag name from git: %s\n", tag)
+			}
+		}
+		v, err := version.NewVersion(tag)
+		if err != nil {
+			panic(fmt.Errorf("unable to parse tag %s", tag))
+		}
+
+		cmd.CurrentVersion = v
 	}
 
 	if !cmd.quiet {
@@ -212,13 +251,22 @@ func (cmd *BaseCommand) getGoEnv() map[string]string {
 }
 
 func (cmd *BaseCommand) runCommandWithOutput(description string, name string, params ...string) []string {
+	result, _ := cmd.runCommandWithOutputFailOptional(true, description, name, params...)
+	return result
+}
+
+func (cmd *BaseCommand) runCommandWithOutputFailOptional(fail bool, description string, name string, params ...string) ([]string, error) {
 	cmd.Infof("%v: %v %v\n", description, name, strings.Join(params, " "))
 	command := exec.Command(name, params...)
 	command.Stderr = nil
 	output := &bytes.Buffer{}
 	command.Stdout = output
 	if err := command.Run(); err != nil {
-		cmd.Failf("error %v: %v\n", description, err)
+		if fail {
+			cmd.Failf("error %v: %v\n", description, err)
+		} else {
+			return nil, err
+		}
 	}
 
 	stringData := strings.Replace(output.String(), "\r\n", "\n", -1)
@@ -229,7 +277,7 @@ func (cmd *BaseCommand) runCommandWithOutput(description string, name string, pa
 			result = append(result, line)
 		}
 	}
-	return result
+	return result, nil
 }
 
 func (cmd *BaseCommand) runCommand(description string, name string, params ...string) {
@@ -268,9 +316,6 @@ func (cmd *BaseCommand) getVersionList(params ...string) []*version.Version {
 		}
 		if v.Prerelease() == "" && v.Metadata() == "" {
 			versions = append(versions, v)
-			if cmd.verbose {
-				cmd.Infof("found version %v\n", v)
-			}
 		}
 	}
 	sort.Sort(versionList(versions))
@@ -359,12 +404,12 @@ func (cmd *BaseCommand) getBaseVersion() *version.Version {
 		if cmd.baseVersionFile == "" {
 			cmd.baseVersionFile = DefaultVersionFile
 		}
-		contents, err := ioutil.ReadFile(cmd.baseVersionFile)
+		contents, err := os.ReadFile(cmd.baseVersionFile)
 		if err != nil {
 			currdir, _ := os.Getwd()
 			cmd.Errorf("unable to load base version information from '%v'. current dir: '%v'\n", cmd.baseVersionFile, currdir)
 
-			contents, err = ioutil.ReadFile("./common/version/VERSION")
+			contents, err = os.ReadFile("./common/version/VERSION")
 			if err != nil {
 				cmd.Failf("unable to load base version information from '%v'. current dir: '%v'\n", cmd.baseVersionFile, currdir)
 			}

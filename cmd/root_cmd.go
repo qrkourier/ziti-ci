@@ -35,9 +35,10 @@ var RootCmd = newRootCommand()
 type RootCommand struct {
 	RootCobraCmd *cobra.Command
 
-	verbose bool
-	dryRun  bool
-	quiet   bool
+	verbose       bool
+	useCurrentTag bool
+	dryRun        bool
+	quiet         bool
 
 	langName string
 	lang     langType
@@ -57,6 +58,7 @@ func newRootCommand() *RootCommand {
 	}
 
 	cobraCmd.PersistentFlags().BoolVarP(&rootCmd.verbose, "verbose", "v", false, "enable verbose output")
+	cobraCmd.PersistentFlags().BoolVarP(&rootCmd.useCurrentTag, "use-current-tag", "t", false, "inspect all tags, including -beta, -pre, -alpha, etc")
 	cobraCmd.PersistentFlags().BoolVarP(&rootCmd.quiet, "quiet", "q", false, "disable informational output")
 	cobraCmd.PersistentFlags().BoolVarP(&rootCmd.dryRun, "dry-run", "d", false, "do a dry run")
 	cobraCmd.PersistentFlags().StringVarP(&rootCmd.langName, "language", "l", "go", "enable language specific settings. Valid values: [go,java]")
@@ -68,6 +70,9 @@ func newRootCommand() *RootCommand {
 
 	rootCobraCmd.AddCommand(newTagCmd(rootCmd))
 	rootCobraCmd.AddCommand(newGoBuildInfoCmd(rootCmd))
+	rootCobraCmd.AddCommand(newGoBuildFlagsCmd(rootCmd))
+	rootCobraCmd.AddCommand(newTidyTagsCmd(rootCmd))
+	rootCobraCmd.AddCommand(newSdkBuildInfoCmd(rootCmd))
 	rootCobraCmd.AddCommand(newConfigureGitCmd(rootCmd))
 	rootCobraCmd.AddCommand(newUpdateGoDepCmd(rootCmd))
 	rootCobraCmd.AddCommand(newCompleteUpdateGoDepCmd(rootCmd))
@@ -78,9 +83,12 @@ func newRootCommand() *RootCommand {
 	rootCobraCmd.AddCommand(newPublishToGithubCmd(rootCmd))
 	rootCobraCmd.AddCommand(newGetCurrentVersionCmd(rootCmd))
 	rootCobraCmd.AddCommand(newGetNextVersionCmd(rootCmd))
+	rootCobraCmd.AddCommand(newVerifyVersionCmd(rootCmd))
+	rootCobraCmd.AddCommand(newVerifyCurrentVersionCmd(rootCmd))
 	rootCobraCmd.AddCommand(newGetBranchCmd(rootCmd))
 	rootCobraCmd.AddCommand(newGetReleaseNotesCmd(rootCmd))
 	rootCobraCmd.AddCommand(newBuildReleaseNotesCmd(rootCmd))
+	rootCobraCmd.AddCommand(newBuildSdkReleaseNotesCmd(rootCmd))
 
 	var versionCmd = &cobra.Command{
 		Use:   "version",
